@@ -1,7 +1,26 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+
+/* Deterministic gradient — same logic as AdminUserMenu */
+const GRADIENTS = [
+  ['#1d4ed8','#2563eb'],['#7c3aed','#8b5cf6'],['#0891b2','#06b6d4'],
+  ['#059669','#10b981'],['#dc2626','#ef4444'],['#d97706','#f59e0b'],
+  ['#db2777','#ec4899'],['#0284c7','#0ea5e9'],
+]
+function avatarGradient(seed?: string | null) {
+  if (!seed) return `linear-gradient(135deg,#1d4ed8,#2563eb)`
+  const h = [...seed].reduce((a, c) => a + c.charCodeAt(0), 0)
+  const [a, b] = GRADIENTS[h % GRADIENTS.length]
+  return `linear-gradient(135deg,${a},${b})`
+}
+function initials(name?: string | null, email?: string | null) {
+  if (name) { const p = name.trim().split(' '); return (p.length>=2 ? p[0][0]+p[p.length-1][0] : p[0].slice(0,2)).toUpperCase() }
+  if (email) return email.slice(0,2).toUpperCase()
+  return 'SA'
+}
 
 type NavItem = {
   href: string
@@ -54,8 +73,16 @@ const COUNT_STYLES: Record<string, React.CSSProperties> = {
   cyan:  { background: 'var(--adm-cyan-bg)',  color: 'var(--adm-cyan)' },
 }
 
-export default function AdminSidebar() {
+interface SidebarProps {
+  name?: string | null
+  email?: string | null
+  image?: string | null
+}
+
+export default function AdminSidebar({ name, email, image }: SidebarProps) {
   const pathname = usePathname()
+  const abbr = initials(name, email)
+  const grad = avatarGradient(name ?? email)
 
   function isActive(href: string, exact?: boolean) {
     if (exact) return pathname === href
@@ -123,10 +150,14 @@ export default function AdminSidebar() {
       {/* Footer */}
       <div style={{ padding: 12, borderTop: '1px solid var(--adm-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 4 }}>
-          <div className="adm-avatar" style={{ background: 'linear-gradient(135deg,#1d4ed8,#2563eb)', color: '#fff' }}>SA</div>
+          {image ? (
+            <Image src={image} alt={abbr} width={32} height={32} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+          ) : (
+            <div className="adm-avatar" style={{ background: grad, color: '#fff', flexShrink: 0 }}>{abbr}</div>
+          )}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 13, fontWeight: 600 }}>Super Admin</p>
-            <p style={{ fontSize: 11, color: 'var(--adm-text3)' }}>admin@urbatrade.com</p>
+            <p style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name ?? 'Super Admin'}</p>
+            <p style={{ fontSize: 11, color: 'var(--adm-text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{email ?? 'admin@urbatrade.com'}</p>
           </div>
         </div>
       </div>

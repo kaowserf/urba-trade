@@ -15,7 +15,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className={`admin-shell ${outfit.className} ${jetbrains.variable}`} style={{ display: 'flex', minHeight: '100vh' }}>
-      <AdminSidebar />
+      <AdminSidebar
+          name={session.user.name}
+          email={session.user.email}
+          image={session.user.image}
+        />
 
       {/* Main */}
       <div style={{ flex: 1, marginLeft: 240, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -58,6 +62,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               name={session.user.name}
               email={session.user.email}
               role={(session.user as AuthUser).role}
+              image={session.user.image}
             />
           </div>
         </header>

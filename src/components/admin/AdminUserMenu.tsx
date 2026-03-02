@@ -2,11 +2,32 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { signOut } from 'next-auth/react'
+import Image from 'next/image'
 
 interface Props {
   name?: string | null
   email?: string | null
   role?: string | null
+  image?: string | null
+}
+
+/* Deterministic gradient based on name — every user gets a unique avatar color */
+const GRADIENTS = [
+  ['#1d4ed8','#2563eb'], // blue
+  ['#7c3aed','#8b5cf6'], // violet
+  ['#0891b2','#06b6d4'], // cyan
+  ['#059669','#10b981'], // emerald
+  ['#dc2626','#ef4444'], // red
+  ['#d97706','#f59e0b'], // amber
+  ['#db2777','#ec4899'], // pink
+  ['#0284c7','#0ea5e9'], // sky
+]
+
+function avatarGradient(seed?: string | null): string {
+  if (!seed) return `linear-gradient(135deg,${GRADIENTS[0][0]},${GRADIENTS[0][1]})`
+  const hash = [...seed].reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  const [a, b] = GRADIENTS[hash % GRADIENTS.length]
+  return `linear-gradient(135deg,${a},${b})`
 }
 
 function initials(name?: string | null, email?: string | null) {
@@ -20,10 +41,42 @@ function initials(name?: string | null, email?: string | null) {
   return 'SA'
 }
 
-export default function AdminUserMenu({ name, email, role }: Props) {
+function Avatar({ image, name, email, size = 34 }: { image?: string | null; name?: string | null; email?: string | null; size?: number }) {
+  const abbr = initials(name, email)
+  const grad = avatarGradient(name ?? email)
+
+  if (image) {
+    return (
+      <Image
+        src={image}
+        alt={abbr}
+        width={size}
+        height={size}
+        style={{ borderRadius: '50%', objectFit: 'cover', display: 'block' }}
+      />
+    )
+  }
+
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      background: grad,
+      color: '#fff',
+      fontSize: size <= 34 ? 11 : 14,
+      fontWeight: 700,
+      letterSpacing: '0.02em',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0,
+      userSelect: 'none',
+    }}>
+      {abbr}
+    </div>
+  )
+}
+
+export default function AdminUserMenu({ name, email, role, image }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const abbr = initials(name, email)
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -35,59 +88,52 @@ export default function AdminUserMenu({ name, email, role }: Props) {
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
+      {/* Topbar trigger button */}
       <button
         onClick={() => setOpen((v) => !v)}
         style={{
-          width: 34, height: 34, borderRadius: '50%',
-          background: 'linear-gradient(135deg,#1d4ed8,#2563eb)',
-          color: '#fff', border: 'none', cursor: 'pointer',
-          fontSize: 11, fontWeight: 700, letterSpacing: '0.02em',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 0, border: 'none', background: 'transparent', cursor: 'pointer',
+          borderRadius: '50%',
+          boxShadow: open ? '0 0 0 2px #3b82f6' : '0 0 0 2px transparent',
           transition: 'box-shadow 0.15s',
-          boxShadow: open ? '0 0 0 2px #3b82f6' : 'none',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
+        title={name ?? email ?? 'Admin'}
       >
-        {abbr}
+        <Avatar image={image} name={name} email={email} size={34} />
       </button>
 
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-          width: 220, background: 'var(--adm-bg2)',
+          width: 230, background: 'var(--adm-bg2)',
           border: '1px solid var(--adm-border2)',
           borderRadius: 12, padding: 6,
           boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
           zIndex: 100,
           animation: 'adm-fadein 0.12s ease',
         }}>
+
           {/* User info header */}
-          <div style={{ padding: '10px 12px 12px', borderBottom: '1px solid var(--adm-border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <div style={{
-                width: 38, height: 38, borderRadius: '50%',
-                background: 'linear-gradient(135deg,#1d4ed8,#2563eb)',
-                color: '#fff', fontSize: 13, fontWeight: 700,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                {abbr}
-              </div>
+          <div style={{ padding: '12px 14px 14px', borderBottom: '1px solid var(--adm-border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+              <Avatar image={image} name={name} email={email} size={44} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <p style={{ fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {name ?? 'Super Admin'}
                 </p>
-                <p style={{ fontSize: 11, color: 'var(--adm-text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <p style={{ fontSize: 11, color: 'var(--adm-text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
                   {email ?? 'admin@urbatrade.com'}
                 </p>
               </div>
             </div>
             <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 5,
+              display: 'inline-flex', alignItems: 'center', gap: 4,
               fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
               background: 'var(--adm-accent-bg)', color: 'var(--adm-accent2)',
-              padding: '2px 8px', borderRadius: 6,
+              padding: '3px 8px', borderRadius: 6,
             }}>
-              ⬡ {role ?? 'ADMIN'}
+              <span style={{ opacity: 0.7 }}>⬡</span> {role ?? 'ADMIN'}
             </span>
           </div>
 
@@ -104,7 +150,7 @@ export default function AdminUserMenu({ name, email, role }: Props) {
             />
           </div>
 
-          {/* Divider + Logout */}
+          {/* Logout */}
           <div style={{ borderTop: '1px solid var(--adm-border)', padding: '4px 0 2px' }}>
             <button
               onClick={() => signOut({ callbackUrl: '/auth/login' })}
