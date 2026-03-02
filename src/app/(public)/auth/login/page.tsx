@@ -1,10 +1,11 @@
 'use client'
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { signIn, getSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import type { AuthUser } from '@/types/auth'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -22,7 +23,9 @@ export default function LoginPage() {
       setError('Invalid email or password')
       setLoading(false)
     } else {
-      router.push('/dashboard')
+      const session = await getSession()
+      const role = (session?.user as unknown as AuthUser)?.role
+      router.push(role === 'ADMIN' ? '/admin' : '/dashboard')
     }
   }
 
