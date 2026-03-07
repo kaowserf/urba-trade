@@ -45,7 +45,11 @@ export default function StrategiesPage() {
                 <div className="flex items-center gap-2">
                   <h3 className="font-bold text-[#f1f5f9]">{s.name}</h3>
                   {isDeployed && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#00ff88] bg-[#00ff88]/10 border border-[#00ff88]/30 px-1.5 py-0.5 rounded">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#00ff88] bg-[#00ff88]/10 border border-[#00ff88]/30 px-1.5 py-0.5 rounded">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00ff88] opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00ff88]" />
+                      </span>
                       Live
                     </span>
                   )}
